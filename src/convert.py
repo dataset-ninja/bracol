@@ -1,85 +1,45 @@
 import supervisely as sly
 import os
-from dataset_tools.convert import unpack_if_archive
-import src.settings as s
-from urllib.parse import unquote, urlparse
-from supervisely.io.fs import get_file_name, get_file_size
-import shutil
-
+from glob import glob
+import imagesize
 from tqdm import tqdm
 
-def download_dataset(teamfiles_dir: str) -> str:
-    """Use it for large datasets to convert them on the instance"""
-    api = sly.Api.from_env()
-    team_id = sly.env.team_id()
-    storage_dir = sly.app.get_data_dir()
 
-    if isinstance(s.DOWNLOAD_ORIGINAL_URL, str):
-        parsed_url = urlparse(s.DOWNLOAD_ORIGINAL_URL)
-        file_name_with_ext = os.path.basename(parsed_url.path)
-        file_name_with_ext = unquote(file_name_with_ext)
+def create_ann(img_path):
+    width, height = imagesize.get(img_path)
+    img_tags = ann_dict.get(sly.fs.get_file_name(img_path))
+    return sly.Annotation(img_size=(height, width), labels=[], img_tags=img_tags)
 
-        sly.logger.info(f"Start unpacking archive '{file_name_with_ext}'...")
-        local_path = os.path.join(storage_dir, file_name_with_ext)
-        teamfiles_path = os.path.join(teamfiles_dir, file_name_with_ext)
 
-        fsize = api.file.get_directory_size(team_id, teamfiles_dir)
-        with tqdm(
-            desc=f"Downloading '{file_name_with_ext}' to buffer...",
-            total=fsize,
-            unit="B",
-            unit_scale=True,
-        ) as pbar:        
-            api.file.download(team_id, teamfiles_path, local_path, progress_cb=pbar)
-        dataset_path = unpack_if_archive(local_path)
+tag_names = ["id", "predominant_stress", "miner", "rust", "phoma", "cercospora", "severity"]
+tag_metas = [sly.TagMeta(name, sly.TagValueType.ANY_STRING) for name in tag_names]
 
-    if isinstance(s.DOWNLOAD_ORIGINAL_URL, dict):
-        for file_name_with_ext, url in s.DOWNLOAD_ORIGINAL_URL.items():
-            local_path = os.path.join(storage_dir, file_name_with_ext)
-            teamfiles_path = os.path.join(teamfiles_dir, file_name_with_ext)
+ann_dict = {}
 
-            if not os.path.exists(get_file_name(local_path)):
-                fsize = api.file.get_directory_size(team_id, teamfiles_dir)
-                with tqdm(
-                    desc=f"Downloading '{file_name_with_ext}' to buffer...",
-                    total=fsize,
-                    unit="B",
-                    unit_scale=True,
-                ) as pbar:
-                    api.file.download(team_id, teamfiles_path, local_path, progress_cb=pbar)
 
-                sly.logger.info(f"Start unpacking archive '{file_name_with_ext}'...")
-                unpack_if_archive(local_path)
-            else:
-                sly.logger.info(
-                    f"Archive '{file_name_with_ext}' was already unpacked to '{os.path.join(storage_dir, get_file_name(file_name_with_ext))}'. Skipping..."
-                )
-
-        dataset_path = storage_dir
-    return dataset_path
-    
-def count_files(path, extension):
-    count = 0
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(extension):
-                count += 1
-    return count
-    
 def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
-    ### Function should read local dataset and upload it to Supervisely project, then return project info.###
-    raise NotImplementedError("The converter should be implemented manually.")
+    project = api.project.create(workspace_id, project_name)
+    project_meta = sly.ProjectMeta(None, tag_metas)
+    project_meta = api.project.update_meta(project.id, project_meta.to_json())
 
-    # dataset_path = "/local/path/to/your/dataset" # general way
-    # dataset_path = download_dataset(teamfiles_dir) # for large datasets stored on instance
+    dataset_path = "/mnt/c/users/german/documents/coffee-datasets/leaf/images"
 
-    # ... some code here ...
+    csv_path = os.path.dirname(dataset_path) + "/dataset.csv"
+    with open(csv_path) as f:
+        for line in f.readlines()[1:]:
+            line_parts = line.strip().split(",")
+            tags = [sly.Tag(tag_metas[i], value) for i, value in enumerate(line_parts)]
+            ann_dict[line_parts[0]] = tags
 
-    # sly.logger.info('Deleting temporary app storage files...')
-    # shutil.rmtree(storage_dir)
+    dataset = api.dataset.create(project.id, "ds0")
+    img_paths = glob(dataset_path + "/*")
+    for img_paths_batch in sly.batched(img_paths):
+        img_names_batch = [sly.fs.get_file_name_with_ext(path) for path in img_paths_batch]
+        img_infos = api.image.upload_paths(dataset.id, img_names_batch, img_paths_batch)
+        img_ids = [img_info.id for img_info in img_infos]
+        anns = [create_ann(img_path) for img_path in img_paths_batch]
+        api.annotation.upload_anns(img_ids, anns)
 
-    # return project
-
-
+    return project
