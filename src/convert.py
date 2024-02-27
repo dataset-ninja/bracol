@@ -12,7 +12,14 @@ def create_ann(img_path):
 
 
 tag_names = ["id", "predominant_stress", "miner", "rust", "phoma", "cercospora", "severity"]
-tag_metas = [sly.TagMeta(name, sly.TagValueType.ANY_STRING) for name in tag_names]
+tag_metas = [
+    (
+        sly.TagMeta(name, sly.TagValueType.NONE)
+        if 2 <= i <= 5
+        else sly.TagMeta(name, sly.TagValueType.ANY_STRING)
+    )
+    for i, name in enumerate(tag_names)
+]
 
 ann_dict = {}
 
@@ -30,7 +37,13 @@ def convert_and_upload_supervisely_project(
     with open(csv_path) as f:
         for line in f.readlines()[1:]:
             line_parts = line.strip().split(",")
-            tags = [sly.Tag(tag_metas[i], value) for i, value in enumerate(line_parts)]
+            tags = []
+            for i, value in enumerate(line_parts):
+                if 2 <= i <= 5:
+                    if value == "1":
+                        tags.append(sly.Tag(tag_metas[i]))
+                else:
+                    tags.append(sly.Tag(tag_metas[i], value))
             ann_dict[line_parts[0]] = tags
 
     dataset = api.dataset.create(project.id, "ds0")

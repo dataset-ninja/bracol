@@ -15,7 +15,7 @@ from dataset_tools.templates import (
 ##################################
 PROJECT_NAME: str = "BRACOL"
 PROJECT_NAME_FULL: str = (
-    "BRACOL - A Brazilian Arabica Coffee Leaf images dataset to identification and quantification of coffee diseases and pests"
+    "BRACOL: A Brazilian Arabica Coffee Leaf Images Dataset to Identification and Quantification of Coffee Diseases and Pests"
 )
 HIDE_DATASET = True  # set False when 100% sure about repo quality
 
@@ -30,7 +30,7 @@ APPLICATIONS: List[Union[Industry, Domain, Research]] = [
 ]
 CATEGORY: Category = Category.Agriculture()
 
-CV_TASKS: List[CVTask] = [CVTask.Classification()]
+CV_TASKS: List[CVTask] = [CVTask.Classification(), CVTask.Identification()]
 ANNOTATION_TYPES: List[AnnotationType] = [AnnotationType.ImageLevel()]
 
 RELEASE_DATE: Optional[str] = "2019-11-06"
@@ -74,16 +74,8 @@ ORGANIZATION_NAME: Optional[Union[str, List[str]]] = "Federal University of Espi
 ORGANIZATION_URL: Optional[Union[str, List[str]]] = "https://www.ufes.br/"
 
 # Set '__PRETEXT__' or '__POSTTEXT__' as a key with string value to add custom text. e.g. SLYTAGSPLIT = {'__POSTTEXT__':'some text}
-SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = {"__POSTTEXT__": "text"}
-TAGS: Optional[List[str]] = [
-    "id",
-    "predominant_stress",
-    "miner",
-    "rust",
-    "phoma",
-    "cercospora",
-    "severity",
-]
+SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = None
+TAGS: Optional[List[str]] = None
 
 
 SECTION_EXPLORE_CUSTOM_DATASETS: Optional[List[str]] = None
