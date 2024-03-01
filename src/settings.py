@@ -68,7 +68,7 @@ AUTHORS: Optional[List[str]] = [
     "Esgario , Guilherme J. M.",
     "Ventura, José A.",
 ]
-AUTHORS_CONTACTS: Optional[List[str]] = None
+AUTHORS_CONTACTS: Optional[List[str]] = ["guilherme.esgario@gmail.com", "krohling.renato@gmail.com"]
 
 ORGANIZATION_NAME: Optional[Union[str, List[str]]] = "Federal University of Espirito Santo, Brazil"
 ORGANIZATION_URL: Optional[Union[str, List[str]]] = "https://www.ufes.br/"
