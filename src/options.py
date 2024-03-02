@@ -60,13 +60,10 @@ CLASSES_PREVIEW_PADDINGS: dict = None
 CLASSES_PREVIEW_ROWS: int = None
 CLASSES_PREVIEW_GAP: int = None
 CLASSES_PREVIEW_TAGS: List[str] = [
-    "id",
-    "predominant_stress",
     "miner",
     "rust",
     "phoma",
     "cercospora",
-    "severity",
 ]
 # default {"top": "10%", "bottom": "10%", "left": "10%", "right": "10%"}
 # set % or px as string values (e.i. "10%" or "10px")
