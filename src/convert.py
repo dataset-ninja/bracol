@@ -23,16 +23,15 @@ def read_dataset_tags(csv_file_path, tag_meta_list):
                 if 2 <= index <= 5:
                     if value == "1":
                         tags.append(sly.Tag(tag_meta_list[index]))
-                elif index == 6:
-                    if value == "0":
-                        tags.append(sly.Tag(tag_meta_list[7]))
+                elif index == 6 and value == "0":
+                    tags.append(sly.Tag(tag_meta_list[7]))
                 else:
                     tags.append(sly.Tag(tag_meta_list[index], value))
             annotations[row[0]] = tags
     return annotations
 
 
-def convert_and_upload_to_supervisely(
+def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
     project = api.project.create(workspace_id, project_name, change_name_if_conflict=True)
@@ -47,7 +46,9 @@ def convert_and_upload_to_supervisely(
         "healthy",
     ]
     tag_meta_list = [
-        sly.TagMeta(name, sly.TagValueType.NONE if 2 <= i <= 5 else sly.TagValueType.ANY_STRING)
+        sly.TagMeta(
+            name, sly.TagValueType.NONE if 2 <= i <= 5 or i == 7 else sly.TagValueType.ANY_STRING
+        )
         for i, name in enumerate(tag_meta_names)
     ]
     project_meta = sly.ProjectMeta(tag_metas=tag_meta_list)
@@ -63,7 +64,9 @@ def convert_and_upload_to_supervisely(
         for path in glob(os.path.join(dataset_path, "*"))
         if path.lower().endswith((".png", ".jpg", ".jpeg"))
     ]
-    for batch in tqdm(sly.batched(image_paths), desc="Uploading images"):
+    for batch in tqdm(
+        sly.batched(image_paths), desc="Uploading images", total=(len(image_paths) // 50)
+    ):
         image_names = [sly.fs.get_file_name_with_ext(path) for path in batch]
         image_infos = api.image.upload_paths(dataset.id, image_names, batch)
         image_ids = [info.id for info in image_infos]
