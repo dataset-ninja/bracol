@@ -9,7 +9,7 @@ A comprehensive dataset comprising 1747 images of coffee leaves was assembled, e
 <span style="font-size: smaller; font-style: italic;">Examples of coffee leaves affected by different biotic stresses: leaf miner (a), rust (b), brown leaft spot (c) and cercospora leaf
 spot (d).</span>
 
-Each image is classified with the following tags: **id**, **predominant_stress**, **severity** and classes tags if present: **miner**, **rust**, **phoma** and **cercospora**
+Each image is classified with the following tags: **id** and **predominant_stress** and classes tags if present: **miner**, **rust**, **phoma** and **cercospora** along the **severity** tag that indicates how severe the disease is. If the leaf is healthy, a **healthy** tag is added to an image.
 
 - **id** represnts image's id
 - **predominant_stress** is the type of stress that is predominant on the leaf (0 if there is no stress, 1 is for **miner**, 2 is for **rust**, 3 is for **phoma**, 4 is for **cercospora**)
